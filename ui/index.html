@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HowLongToBeat Game Sorter</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="brand-icon">⏱️</div>
+        <div>
+          <h1 class="brand-title">Game Backlog Sorter</h1>
+          <p class="brand-subtitle">Powered by HowLongToBeat.com</p>
+        </div>
+      </div>
+      <div class="actions-section">
+        <input type="file" id="file-input" style="display: none;" accept=".txt">
+        <button id="load-btn" class="btn btn-primary" title="Open a text file with games">
+          <span>📂</span> Load games list
+        </button>
+        <button id="export-btn" class="btn btn-secondary" title="Export this report as a standalone HTML file">
+          <span>💾</span> Export HTML
+        </button>
+      </div>
+    </header>
+
+    <!-- Controls Bar -->
+    <div class="controls-bar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" class="search-input" placeholder="Search by game title or release year...">
+      </div>
+      <div id="stats-counter" class="stats-counter">No games loaded</div>
+    </div>
+
+    <!-- Progress Card -->
+    <div id="progress-card" class="progress-card">
+      <div class="progress-header">
+        <span id="progress-status" class="progress-status">Fetching data...</span>
+        <span id="progress-count" class="stats-counter">0 / 0</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div id="progress-bar-fill" class="progress-bar-fill"></div>
+      </div>
+    </div>
+
+    <!-- Games Table Card -->
+    <div id="table-card" class="table-card" style="display: none;">
+      <div class="table-responsive">
+        <table class="games-table">
+          <thead>
+            <tr>
+              <th data-sort="title" style="min-width: 280px;">Title <span class="sort-icon">↕</span></th>
+              <th data-sort="main_story" style="width: 170px;">Main Story <span class="sort-icon">↕</span></th>
+              <th data-sort="main_extra" class="sorted-asc" style="width: 170px;">Main + Extra <span class="sort-icon">▲</span></th>
+              <th data-sort="completionist" style="width: 170px;">Completionist <span class="sort-icon">↕</span></th>
+            </tr>
+          </thead>
+          <tbody id="games-table-body">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="table-card empty-state">
+      <div class="empty-state-icon">🎮</div>
+      <h2 class="empty-state-title">No games loaded yet</h2>
+      <p class="empty-state-desc">
+        Click <strong>"Load games list"</strong> above to select a text file containing your games (e.g. <code>Title YYYY</code>).
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Data retrieved from <a href="https://howlongtobeat.com" target="_blank" rel="noopener noreferrer">HowLongToBeat.com</a>.</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

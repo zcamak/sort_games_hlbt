@@ -1,0 +1,12 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Runtime & output files
+app/
+*.exe
+cache.json
+build/temp/
+html/*.html
+!html/.gitkeep
