@@ -20,6 +20,23 @@ class TestParser(unittest.TestCase):
         result = parse_line("Half-Life 2")
         self.assertEqual(result, {"title": "Half-Life 2", "year": None, "raw": "Half-Life 2"})
 
+    def test_unknown_release_year_cases(self):
+        # Case 1: Title ending in "Unknown" + 4-digit release date
+        res1 = parse_line("XCOM: Enemy Unknown 2012")
+        self.assertEqual(res1, {"title": "XCOM: Enemy Unknown", "year": 2012, "raw": "XCOM: Enemy Unknown 2012"})
+
+        # Case 2: Title ending in "Unknown" + Playnite's "Unknown" release date
+        res2 = parse_line("XCOM: Enemy Unknown Unknown")
+        self.assertEqual(res2, {"title": "XCOM: Enemy Unknown", "year": None, "raw": "XCOM: Enemy Unknown Unknown"})
+
+        # Case 3: Normal title + Playnite's "Unknown" release date
+        res3 = parse_line("Targeted - 10 Days Unknown")
+        self.assertEqual(res3, {"title": "Targeted - 10 Days", "year": None, "raw": "Targeted - 10 Days Unknown"})
+
+        # Case 4: Hand-entered title ending in "Unknown" without release date
+        res4 = parse_line("XCOM: Enemy Unknown")
+        self.assertEqual(res4, {"title": "XCOM: Enemy Unknown", "year": None, "raw": "XCOM: Enemy Unknown"})
+
     def test_empty_and_comment_lines(self):
         self.assertIsNone(parse_line(""))
         self.assertIsNone(parse_line("   "))
