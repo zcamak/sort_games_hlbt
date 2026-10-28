@@ -23,6 +23,11 @@
   const timeRangeDisplay = document.getElementById("time-range-display");
   const resetFilterBtn = document.getElementById("reset-filter-btn");
   const statsCounter = document.getElementById("stats-counter");
+  const alertBanner = document.getElementById("alert-banner");
+  const alertIcon = document.getElementById("alert-icon");
+  const alertTitle = document.getElementById("alert-title");
+  const alertMessage = document.getElementById("alert-message");
+  const alertCloseBtn = document.getElementById("alert-close-btn");
   const progressCard = document.getElementById("progress-card");
   const progressStatus = document.getElementById("progress-status");
   const progressCount = document.getElementById("progress-count");
@@ -40,6 +45,32 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
+  }
+
+  // Alert Banner Helpers
+  function showAlert(type, title, message) {
+    if (!alertBanner) return;
+    alertBanner.className = `alert-banner alert-${type}`;
+    if (alertIcon) {
+      alertIcon.textContent = type === "error" ? "⛔" : "⚠️";
+    }
+    if (alertTitle) {
+      alertTitle.textContent = title;
+    }
+    if (alertMessage) {
+      alertMessage.textContent = message;
+    }
+    alertBanner.style.display = "flex";
+  }
+
+  function hideAlert() {
+    if (alertBanner) {
+      alertBanner.style.display = "none";
+    }
+  }
+
+  if (alertCloseBtn) {
+    alertCloseBtn.addEventListener("click", hideAlert);
   }
 
   // Sorting Comparator
@@ -270,15 +301,27 @@
         progressCount.textContent = "";
 
         const result = await window.pywebview.api.select_file();
-        if (result && result.games) {
+        if (result && result.error) {
+          progressCard.style.display = "none";
+          showAlert("error", "Input File Error", result.error);
+        } else if (result && result.games) {
+          hideAlert();
           window.onGamesLoaded(result.games);
+          if (result.warnings && result.warnings.length > 0) {
+            showAlert(
+              "warning",
+              `Input Sanity Check Notice (${result.warnings.length} issue(s) detected)`,
+              result.warnings.slice(0, 10).join("\n") +
+                (result.warnings.length > 10 ? `\n...and ${result.warnings.length - 10} more` : "")
+            );
+          }
         } else if (result && result.cancelled) {
           progressCard.style.display = "none";
         }
       } catch (err) {
         console.error("Error loading file via pywebview:", err);
         progressCard.style.display = "none";
-        alert("Failed to load file: " + err);
+        showAlert("error", "Unexpected Error", "Failed to load file: " + err);
       }
     } else {
       // Browser fallback via file input

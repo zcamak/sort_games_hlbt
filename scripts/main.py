@@ -26,10 +26,10 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 try:
-    from scripts.parser import parse_games_file
+    from scripts.parser import parse_games_file, parse_games_file_detailed
     from scripts.hltb_service import HLTBService
 except ImportError:
-    from parser import parse_games_file
+    from parser import parse_games_file, parse_games_file_detailed
     from hltb_service import HLTBService
 
 
@@ -106,9 +106,19 @@ class AppApi:
         if not os.path.exists(file_path):
             return {"error": "File does not exist"}
 
-        games_to_fetch = parse_games_file(file_path)
+        try:
+            games_to_fetch, parse_warnings = parse_games_file_detailed(file_path)
+        except ValueError as e:
+            return {"error": str(e)}
+
         if not games_to_fetch:
-            return {"error": "No valid game entries found in file", "games": []}
+            if parse_warnings:
+                details = "\n".join(parse_warnings[:5])
+                return {
+                    "error": f"No valid game entries found in file.\n{details}",
+                    "warnings": parse_warnings,
+                }
+            return {"error": "No valid game entries found in file (the file is empty or contains only comments)."}
 
         def on_progress(current: int, tot: int, game_data: Dict[str, Any]):
             name = game_data.get("game_name") or game_data.get("user_title") or ""
@@ -118,7 +128,12 @@ class AppApi:
 
         processed = self.service.fetch_games_list(games_to_fetch, progress_callback=on_progress)
         self.current_games = processed
-        return {"success": True, "games": processed, "filepath": file_path}
+        return {
+            "success": True,
+            "games": processed,
+            "filepath": file_path,
+            "warnings": parse_warnings,
+        }
 
     def export_html(self, games: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
         """
@@ -155,9 +170,22 @@ def run_cli(file_path: str):
         sys.exit(1)
 
     print(f"Parsing '{file_path}'...")
-    games = parse_games_file(file_path)
+    try:
+        games, parse_warnings = parse_games_file_detailed(file_path)
+    except ValueError as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+    if parse_warnings:
+        print(f"\nInput Sanity Check Warnings ({len(parse_warnings)}):")
+        for w in parse_warnings[:10]:
+            print(f"  - {w}")
+        if len(parse_warnings) > 10:
+            print(f"  ... and {len(parse_warnings) - 10} more warning(s).")
+        print()
+
     if not games:
-        print("No games found in file.")
+        print("Error: No valid game entries found in file.")
         sys.exit(1)
 
     print(f"Found {len(games)} games. Fetching data from HowLongToBeat...")
