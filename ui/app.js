@@ -7,12 +7,21 @@
     direction: "asc", // Shortest to longest by default
   };
   let searchQuery = "";
+  let filterStyle = "main_extra";
+  let minHours = 0;
+  let maxHours = 100; // 100 represents "100+" (no upper cap)
 
   // DOM Elements
   const loadBtn = document.getElementById("load-btn");
   const exportBtn = document.getElementById("export-btn");
   const fileInput = document.getElementById("file-input");
   const searchInput = document.getElementById("search-input");
+  const playstyleSelect = document.getElementById("playstyle-select");
+  const timeMinSlider = document.getElementById("time-min-slider");
+  const timeMaxSlider = document.getElementById("time-max-slider");
+  const sliderRangeFill = document.getElementById("slider-range-fill");
+  const timeRangeDisplay = document.getElementById("time-range-display");
+  const resetFilterBtn = document.getElementById("reset-filter-btn");
   const statsCounter = document.getElementById("stats-counter");
   const progressCard = document.getElementById("progress-card");
   const progressStatus = document.getElementById("progress-status");
@@ -60,6 +69,37 @@
     return isAsc ? timeA - timeB : timeB - timeA;
   }
 
+  // Update Dual Range Slider UI
+  function updateSliderUI() {
+    if (!timeMinSlider || !timeMaxSlider) return;
+
+    const minPercent = (minHours / 100) * 100;
+    const maxPercent = (maxHours / 100) * 100;
+
+    if (sliderRangeFill) {
+      sliderRangeFill.style.left = minPercent + "%";
+      sliderRangeFill.style.width = Math.max(0, maxPercent - minPercent) + "%";
+    }
+
+    // Prevent left thumb from getting trapped under right thumb at the upper end
+    if (minHours > 90) {
+      timeMinSlider.style.zIndex = "3";
+      timeMaxSlider.style.zIndex = "2";
+    } else {
+      timeMinSlider.style.zIndex = "2";
+      timeMaxSlider.style.zIndex = "3";
+    }
+
+    const maxLabel = maxHours >= 100 ? "100+" : `${maxHours}`;
+    if (timeRangeDisplay) {
+      timeRangeDisplay.textContent = `${minHours} – ${maxLabel} hours`;
+    }
+
+    if (resetFilterBtn) {
+      resetFilterBtn.style.display = minHours > 0 || maxHours < 100 ? "inline-block" : "none";
+    }
+  }
+
   // Render Table
   function renderTable() {
     if (!allGames || allGames.length === 0) {
@@ -69,13 +109,42 @@
       return;
     }
 
-    // Filter by search query
+    const isTimeFilterActive = minHours > 0 || maxHours < 100;
+
+    // Filter by search query and playtime range
     const filtered = allGames.filter((g) => {
-      if (!searchQuery) return true;
-      const q = searchQuery.toLowerCase();
-      const title = (g.game_name || g.user_title || "").toLowerCase();
-      const year = g.release_year ? String(g.release_year) : "";
-      return title.includes(q) || year.includes(q);
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const title = (g.game_name || g.user_title || "").toLowerCase();
+        const year = g.release_year ? String(g.release_year) : "";
+        if (!title.includes(q) && !year.includes(q)) {
+          return false;
+        }
+      }
+
+      if (isTimeFilterActive) {
+        const timeObj = g[filterStyle];
+        const minutes = timeObj ? timeObj.minutes : -1;
+        // Exclude games without recorded time for the selected gameplay style when filtering by time
+        if (minutes <= 0) {
+          return false;
+        }
+
+        const minMinutes = minHours * 60;
+        if (minutes < minMinutes) {
+          return false;
+        }
+
+        // maxHours === 100 represents "100+" (no upper cap)
+        if (maxHours < 100) {
+          const maxMinutes = maxHours * 60;
+          if (minutes > maxMinutes) {
+            return false;
+          }
+        }
+      }
+
+      return true;
     });
 
     // Sort
@@ -263,6 +332,52 @@
     searchQuery = e.target.value.trim();
     renderTable();
   });
+
+  if (playstyleSelect) {
+    playstyleSelect.addEventListener("change", function (e) {
+      filterStyle = e.target.value;
+      renderTable();
+    });
+  }
+
+  if (timeMinSlider) {
+    timeMinSlider.addEventListener("input", function (e) {
+      let val = parseInt(e.target.value, 10);
+      if (val > maxHours) {
+        val = maxHours;
+        timeMinSlider.value = val;
+      }
+      minHours = val;
+      updateSliderUI();
+      renderTable();
+    });
+  }
+
+  if (timeMaxSlider) {
+    timeMaxSlider.addEventListener("input", function (e) {
+      let val = parseInt(e.target.value, 10);
+      if (val < minHours) {
+        val = minHours;
+        timeMaxSlider.value = val;
+      }
+      maxHours = val;
+      updateSliderUI();
+      renderTable();
+    });
+  }
+
+  if (resetFilterBtn) {
+    resetFilterBtn.addEventListener("click", function () {
+      minHours = 0;
+      maxHours = 100;
+      if (timeMinSlider) timeMinSlider.value = 0;
+      if (timeMaxSlider) timeMaxSlider.value = 100;
+      updateSliderUI();
+      renderTable();
+    });
+  }
+
+  updateSliderUI();
 
   document.querySelectorAll(".games-table th[data-sort]").forEach((th) => {
     th.addEventListener("click", onHeaderClick);

@@ -28,6 +28,7 @@ if (-not (Test-Path $distDir)) {
 # Run PyInstaller via virtual environment python
 Set-Location $projectRoot
 & $venvPython -m PyInstaller $specFile --distpath $distDir --workpath $workDir --noconfirm
+$pyiExitCode = $LASTEXITCODE
 
 # Clean up temporary build artifacts
 if (Test-Path $workDir) {
@@ -35,9 +36,9 @@ if (Test-Path $workDir) {
 }
 
 $outputExe = Join-Path $distDir "GameSorter.exe"
-if (Test-Path $outputExe) {
+if ($pyiExitCode -eq 0 -and (Test-Path $outputExe)) {
     Write-Host "`n[SUCCESS] Standalone executable created at:" -ForegroundColor Green
     Write-Host "  $outputExe" -ForegroundColor Yellow
 } else {
-    Write-Error "Build failed: GameSorter.exe was not created."
+    Write-Error "Build failed (exit code $pyiExitCode). Make sure GameSorter.exe is closed before rebuilding."
 }

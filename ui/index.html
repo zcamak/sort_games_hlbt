@@ -37,6 +37,37 @@
       <div id="stats-counter" class="stats-counter">No games loaded</div>
     </div>
 
+    <!-- Full-Width Playtime Filter Card -->
+    <div class="time-filter-card">
+      <div class="time-filter-header">
+        <div class="time-filter-group">
+          <label for="playstyle-select" class="filter-label">Style:</label>
+          <select id="playstyle-select" class="playstyle-select" title="Select gameplay style to filter by">
+            <option value="main_story">Main Story</option>
+            <option value="main_extra" selected>Main + Extra</option>
+            <option value="completionist">Completionist</option>
+          </select>
+        </div>
+
+        <div class="time-filter-status">
+          <span class="filter-label">Time to beat:</span>
+          <span id="time-range-display" class="time-range-badge">0 – 100+ hours</span>
+          <button id="reset-filter-btn" class="btn-reset-filter" title="Reset time filter" style="display: none;">Reset</button>
+        </div>
+      </div>
+
+      <div class="dual-slider-container">
+        <span class="slider-bound-label">0h</span>
+        <div class="dual-slider-wrap">
+          <div class="slider-track"></div>
+          <div id="slider-range-fill" class="slider-range-fill"></div>
+          <input type="range" id="time-min-slider" class="range-input range-min" min="0" max="100" value="0" step="1" aria-label="Minimum hours">
+          <input type="range" id="time-max-slider" class="range-input range-max" min="0" max="100" value="100" step="1" aria-label="Maximum hours">
+        </div>
+        <span class="slider-bound-label">100+</span>
+      </div>
+    </div>
+
     <!-- Progress Card -->
     <div id="progress-card" class="progress-card">
       <div class="progress-header">
